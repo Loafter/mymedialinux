@@ -1,0 +1,13 @@
+--- ./systemd/configure	2014-05-31 16:27:25.766110174 +0400
++++ ./systemd/configure.new	2014-05-31 16:27:29.358110223 +0400
+@@ -16347,9 +16347,7 @@
+ 
+ fi
+         fi
+-        if test "x$have_kmod" = xno -a "x$enable_kmod" = xyes; then
+-                as_fn_error $? "*** kmod support requested, but libraries not found" "$LINENO" 5
+-        fi
++       	have_kmod=yes
+ fi
+  if test "$have_kmod" = "yes"; then
+   HAVE_KMOD_TRUE=

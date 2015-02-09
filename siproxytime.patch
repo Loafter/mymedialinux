@@ -1,0 +1,11 @@
+--- ./siproxd-0.8.2dev/src/dejitter.c	2011-05-28 19:47:15.000000000 +0400
++++ ./siproxd-0.8.2dev/src/dejitter.c.patched	2014-01-22 21:08:01.832003489 +0400
+@@ -21,7 +21,7 @@
+ #include "config.h"
+ 
+ #include <errno.h>
+-
++#include <sys/time.h>
+ #include <sys/types.h>
+ #include <sys/socket.h>
+ #include <netinet/in.h>

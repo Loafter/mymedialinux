@@ -1,0 +1,13 @@
+--- ./Makefile	2013-12-24 22:09:05.187326516 +0400
++++ ./Makefile.patched	2013-12-24 22:11:05.727328169 +0400
+@@ -3606,8 +3606,8 @@
+      }				\
+    END {$$m and (warn "$@: do not use upper case in \@var{...}\n"), exit 1}'
+ 
+-#run_help2man = $(SHELL) $(srcdir)/man/dummy-man
+-run_help2man = $(PERL) -- $(srcdir)/man/help2man
++run_help2man = $(SHELL) $(srcdir)/man/dummy-man
++#run_help2man = $(PERL) -- $(srcdir)/man/help2man
+ ALL_MANS = $(man1_MANS) $(EXTRA_MANS)
+ 
+ # Dependencies common to all man pages.  Updated below.

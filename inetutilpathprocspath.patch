@@ -1,0 +1,12 @@
+--- ./inetutils-1.9.2/ifconfig/system/linux.c	2013-09-26 13:36:38.000000000 +0400
++++ ./linuxpathed.c	2014-01-18 21:45:50.063238980 +0400
+@@ -49,6 +49,9 @@
+ 
+ #include "../ifconfig.h"
+ 
++#ifndef PATH_PROCNET_DEV
++  #define PATH_PROCNET_DEV "/proc/net/dev"
++#endif
+ 
+ /* ARPHRD stuff.  */
+ 

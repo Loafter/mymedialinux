@@ -1,0 +1,11 @@
+--- ./man/dummy-man	2013-12-24 22:14:13.415330742 +0400
++++ ./man/dummy-man.pathed	2013-12-24 22:14:28.715330951 +0400
+@@ -38,8 +38,6 @@
+   shift
+ done
+ 
+-test $# -gt 0 || fatal_ "missing argument"
+-test $# -le 1 || fatal_ "too many non-option arguments"
+ 
+ baseout=`basename_ "$output"`
+ sed 's/^/WARNING: /' >&2 <<END

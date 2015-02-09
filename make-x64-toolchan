@@ -1,0 +1,219 @@
+#!/bin/sh
+#sudo apt-get install gawk make gcc g++ gperf git subversion
+TARGET="x86_64-media-linux-gnu"
+CLFS="$1"
+isget="$2"
+SYSROOT="$CLFS/root"
+export PATH=$CLFS/bin/:$PATH
+HOST="x86_64-pc-linux-gnu"
+LINUX_VERSION=3.17.1
+BINUTILS_VERSION=2.24
+GCC_VERSION=4.9.1
+unset CFLAGS
+unset CXXFLAGS
+check_success() {
+   if [ $? -ne 0 ]
+   then
+      echo Failed
+      exit 1
+   fi
+   echo Done
+}
+
+if [ "$2" = "clear" ]
+then
+    rm -rfv $CLFS
+    mkdir -p $SYSROOT
+    check_success
+exit 1
+fi
+mkdir -p $SYSROOT
+
+
+
+InstallKernelHeader()
+{
+
+if [ "$isget" = "get" ]
+then
+    wget -c "https://www.kernel.org/pub/linux/kernel/v3.x/linux-$LINUX_VERSION.tar.gz"
+    tar -xf linux-$LINUX_VERSION.tar.gz
+    rm linux-$LINUX_VERSION.tar.gz
+fi
+echo -n "Install kernel headers..."
+cd linux-$LINUX_VERSION/
+if [ "$isget" != "install" ]
+then
+    make mrproper
+    make ARCH=x86 headers_check
+fi
+make ARCH=x86 INSTALL_HDR_PATH=$SYSROOT headers_install
+cd ..
+check_success
+}
+
+InstallBinutils()
+{
+
+if [ "$isget" = "get" ]
+then
+    wget -c "http://ftp.gnu.org/gnu/binutils/binutils-$BINUTILS_VERSION.tar.gz"
+    tar -xf binutils-$BINUTILS_VERSION.tar.gz
+    rm binutils-$BINUTILS_VERSION.tar.gz
+fi
+echo -n "Install binutils..."
+mkdir $TARGET-binutils
+cd $TARGET-binutils
+if [ "$isget" != "install" ]
+then
+    rm -rf ./*
+    ../binutils-$BINUTILS_VERSION/configure --prefix=$CLFS --target=$TARGET --with-sysroot=$SYSROOT  --disable-nls --enable-plugins
+    make V=0 -j 4 
+check_success
+fi
+make install
+check_success
+cd ..
+
+}
+
+InstallStaticGCC()
+{
+if [ "$isget" = "get" ]
+then
+    wget -c "http://ftp.gnu.org/gnu/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.bz2"
+    tar -xf gcc-$GCC_VERSION.tar.bz2
+    rm /gcc-$GCC_VERSION.tar.bz2
+    cd ./gcc-$GCC_VERSION/
+    ./contrib/download_prerequisites
+    cd ..
+    check_success
+
+fi
+echo -n "Install static gcc..."
+mkdir $TARGET-static-gcc
+cd $TARGET-static-gcc
+if [ "$isget" != "install" ]
+then
+    rm -rf ./*
+    ../gcc-$GCC_VERSION/configure --disable-multilib --target=$TARGET --prefix=$CLFS --with-sysroot=$SYSROOT --disable-nls  --disable-shared --without-headers --with-newlib --disable-decimal-float --disable-libgomp --disable-libmudflap --disable-libssp --disable-threads --disable-libatomic --disable-libitm --disable-libsanitizer --disable-libquadmath --disable-target-libiberty --enable-languages=c --enable-checking=release
+    make V=0 all-gcc -j 4 
+    check_success
+    make V=0 all-target-libgcc -j 4 
+    check_success 
+fi
+make install-gcc install-target-libgcc
+check_success
+cd ..
+}
+
+
+InstallEGLIB()
+{
+if [ "$isget" = "get" ]
+then
+    svn co http://www.eglibc.org/svn/trunk eglibc
+fi
+
+echo -n "Install eglibs header files..."
+mkdir $TARGET-eglibs
+cd $TARGET-eglibs
+if [ "$isget" != "install" ]
+then
+    rm -rf ./*
+    echo "libc_cv_ssp=no" > config.cache
+    BUILD_CC="gcc" \
+    CC="$CLFS/bin/$TARGET-gcc" \
+    AR="$CLFS/bin/$TARGET-ar" \
+    RANLIB="$CLFS/bin/$TARGET-ranlib" \
+    ../eglibc/libc/configure \
+    --prefix=/ \
+    --with-headers=$SYSROOT/include \
+    --build=$HOST \
+    --host=$TARGET \
+    --disable-profile --without-gd --without-cvs --enable-add-ons --cache-file=config.cache
+    check_success
+    make V=0 -j 4
+    check_success
+fi
+make install install_root=$SYSROOT
+check_success
+cd ..
+}
+
+InstallGLIB()
+{
+if [ "$isget" = "get" ]
+then
+    git clone git://sourceware.org/git/glibc.git
+fi
+
+echo -n "Install eglibs header files..."
+mkdir $TARGET-glibc
+cd $TARGET-glibc
+if [ "$isget" != "install" ]
+then
+    rm -rf ./*
+    echo "libc_cv_ssp=no" > config.cache
+    BUILD_CC="gcc" \
+    CC="$CLFS/bin/$TARGET-gcc" \
+    AR="$CLFS/bin/$TARGET-ar" \
+    RANLIB="$CLFS/bin/$TARGET-ranlib" \
+    ../glibc/configure \
+    --prefix=/ \
+    --with-headers=$SYSROOT/include \
+    --build=$HOST \
+    --host=$TARGET \
+    --disable-profile --without-gd --without-cvs --enable-add-ons --cache-file=config.cache
+    check_success 
+    make V=0 -j 4
+    check_success
+fi
+make install install_root=$SYSROOT
+check_success
+cd ..
+}
+
+InstallFinallGCC()
+{
+if [ "$isget" = "get" ]
+then
+    wget -c "http://ftp.gnu.org/gnu/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.bz2"
+    tar -xf gcc-$GCC_VERSION.tar.bz2
+    rm /gcc-$GCC_VERSION.tar.bz2
+    cd ./gcc-$GCC_VERSION/
+    ./contrib/download_prerequisites
+    cd ..
+    check_success
+
+fi
+echo -n "Install final gcc..."
+mkdir $TARGET-final-gcc
+cd $TARGET-final-gcc
+if [ "$isget" != "install" ]
+then
+    rm -rf ./*
+    ../gcc-$GCC_VERSION/configure \
+    --build=$HOST --target=$TARGET --host=$HOST --prefix=$CLFS \
+    --with-sysroot=$SYSROOT --enable-shared --enable-languages=c,c++ \
+    --with-native-system-header-dir=/include \
+    --enable-__cxa_atexit --enable-c99 --enable-long-long --enable-threads=posix \
+    --enable-checking=release \
+    --disable-multilib \
+    --disable-nls \
+    --enable-libstdcxx-time
+    make V=0 AS_FOR_TARGET="$TARGET-as" LD_FOR_TARGET="$TARGET-ld" -j 4 
+    check_success
+fi
+make install
+mkdir -p $SYSROOT/lib
+cp -fv $CLFS/x86_64-media-linux-gnu/lib64/libgcc* $SYSROOT/lib 
+check_success
+cd ..
+}
+ 
+InstallKernelHeader
+InstallBinutils
+InstallStaticGCC
+InstallGLIB
+InstallFinallGCC

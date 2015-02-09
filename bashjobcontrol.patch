@@ -1,0 +1,22 @@
+--- ./execute_cmd.c	2011-02-10 01:32:25.000000000 +0300
++++ ./execute_cmd.c.patched	2013-12-24 20:33:42.123248058 +0400
+@@ -2202,7 +2202,8 @@
+   /* If the `lastpipe' option is set with shopt, and job control is not
+      enabled, execute the last element of non-async pipelines in the
+      current shell environment. */
+-  if (lastpipe_opt && job_control == 0 && asynchronous == 0 && pipe_out == NO_PIPE && prev > 0)
++#if defined (JOB_CONTROL)  
++if (lastpipe_opt && job_control == 0 && asynchronous == 0 && pipe_out == NO_PIPE && prev > 0)
+     {
+       lstdin = move_to_high_fd (0, 0, 255);
+       if (lstdin > 0)
+@@ -2216,7 +2217,8 @@
+ 	  add_unwind_protect (lastpipe_cleanup, lastpipe_jid);
+ 	}
+       cmd->flags |= CMD_LASTPIPE;
+-    }	  
++    }	
++#endif /* JOB_CONTROL */  
+   if (prev >= 0)
+     add_unwind_protect (close, prev);
+ 
