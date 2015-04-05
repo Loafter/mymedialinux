@@ -6,9 +6,9 @@ isget="$2"
 SYSROOT="$CLFS/root"
 export PATH=$CLFS/bin/:$PATH
 HOST="x86_64-pc-linux-gnu"
-LINUX_VERSION=3.17.1
-BINUTILS_VERSION=2.24
-GCC_VERSION=4.9.1
+LINUX_VERSION=4.0-rc6
+BINUTILS_VERSION=2.25
+GCC_VERSION=4.9.2
 unset CFLAGS
 unset CXXFLAGS
 check_success() {
@@ -36,7 +36,7 @@ InstallKernelHeader()
 
 if [ "$isget" = "get" ]
 then
-    wget -c "https://www.kernel.org/pub/linux/kernel/v3.x/linux-$LINUX_VERSION.tar.gz"
+    wget -c "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-$LINUX_VERSION.tar.gz"
     tar -xf linux-$LINUX_VERSION.tar.gz
     rm linux-$LINUX_VERSION.tar.gz
 fi
@@ -68,7 +68,7 @@ if [ "$isget" != "install" ]
 then
     rm -rf ./*
     ../binutils-$BINUTILS_VERSION/configure --prefix=$CLFS --target=$TARGET --with-sysroot=$SYSROOT  --disable-nls --enable-plugins
-    make V=0 -j 4 
+    make V=0 -j 9 
 check_success
 fi
 make install
@@ -97,9 +97,9 @@ if [ "$isget" != "install" ]
 then
     rm -rf ./*
     ../gcc-$GCC_VERSION/configure --disable-multilib --target=$TARGET --prefix=$CLFS --with-sysroot=$SYSROOT --disable-nls  --disable-shared --without-headers --with-newlib --disable-decimal-float --disable-libgomp --disable-libmudflap --disable-libssp --disable-threads --disable-libatomic --disable-libitm --disable-libsanitizer --disable-libquadmath --disable-target-libiberty --enable-languages=c --enable-checking=release
-    make V=0 all-gcc -j 4 
+    make V=0 all-gcc -j 9 
     check_success
-    make V=0 all-target-libgcc -j 4 
+    make V=0 all-target-libgcc -j 9 
     check_success 
 fi
 make install-gcc install-target-libgcc
@@ -133,7 +133,7 @@ then
     --host=$TARGET \
     --disable-profile --without-gd --without-cvs --enable-add-ons --cache-file=config.cache
     check_success
-    make V=0 -j 4
+    make V=0 -j 9
     check_success
 fi
 make install install_root=$SYSROOT
@@ -166,7 +166,7 @@ then
     --host=$TARGET \
     --disable-profile --without-gd --without-cvs --enable-add-ons --cache-file=config.cache
     check_success 
-    make V=0 -j 4
+    make V=0 -j 9
     check_success
 fi
 make install install_root=$SYSROOT
@@ -202,7 +202,7 @@ then
     --disable-multilib \
     --disable-nls \
     --enable-libstdcxx-time
-    make V=0 AS_FOR_TARGET="$TARGET-as" LD_FOR_TARGET="$TARGET-ld" -j 4 
+    make V=0 AS_FOR_TARGET="$TARGET-as" LD_FOR_TARGET="$TARGET-ld" -j 9 
     check_success
 fi
 make install
