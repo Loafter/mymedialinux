@@ -744,12 +744,7 @@ export AR="ar"
 export RANLIB="ranlib"
 export STRIP="strip"
 make V=0 ARCH=x86 CROSS_COMPILE="$CLFS/bin/x86_64-media-linux-gnu-" menuconfig -j 9
-check_success
-#make V=0 ARCH=x86 CROSS_COMPILE="$CLFS/bin/x86_64-media-linux-gnu-" -j 9
-#check_success
-#make V=0 ARCH=x86 CROSS_COMPILE="$CLFS/bin/x86_64-media-linux-gnu-" modules -j 9
-#check_success
-make V=0 ARCH=x86 CROSS_COMPILE="$CLFS/bin/x86_64-media-linux-gnu-" bzImage -j 4
+make V=0 ARCH=x86 CROSS_COMPILE="$CLFS/bin/x86_64-media-linux-gnu-" bzImage -j 3
 check_success
 export CXX="x86_64-media-linux-gnu-g++"
 export LD="x86_64-media-linux-gnu-ld"
@@ -802,6 +797,7 @@ export LD_LIBRARY_PATH=/lib:
 /bin/busybox mount -n -t devtmpfs devtmpfs /dev
 /bin/busybox mount -n -t proc     proc     /proc
 /bin/busybox mount -n -t sysfs    sysfs    /sys
+/bin/busybox mount -t tmpfs -o size=128m tmpfs /tmp
 
 /bin/busybox mkdir /newroot
 init="/lib/systemd/systemd"
@@ -1018,10 +1014,12 @@ EOF
 
 cat > "$SYSROOT/root/fixall.sh" << "EOF"
 #!/bin/bash
-export LD_LIBRARY_PATH=/lib:/lib
+export LD_LIBRARY_PATH=/lib:
 rm -rfv /lib/systemd/system/systemd-update-done.service
 rm -rfv /lib/udev/rules.d/60-persistent-storage.rules
 rm -rfv /lib/systemd/system/systemd-sysctl.service
+rm -rfv /lib/systemd/system/sysinit.target.wants/systemd-update-done.service
+rm -rfv /lib/systemd/system/sysinit.target.wants/systemd-sysctl.service
 EOF
 chmod +x $SYSROOT/root/fixall.sh
 
@@ -1461,7 +1459,7 @@ cd ..
 CLFS="$1"
 SYSROOT="$CLFS/root"
 HOST="x86_64-media-linux-gnu"
-LINUX_VERSION=4.0-rc6
+LINUX_VERSION=4.0-rc7
 export PATH=$CLFS/bin/:$PATH
 unset CFLAGS
 unset CXXFLAGS
