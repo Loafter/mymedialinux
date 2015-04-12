@@ -798,13 +798,14 @@ export LD_LIBRARY_PATH=/lib:
 /bin/busybox mount -n -t proc     proc     /proc
 /bin/busybox mount -n -t sysfs    sysfs    /sys
 /bin/busybox mount -t tmpfs -o size=128m tmpfs /tmp
-
+/bin/busybox mkdir /ramfs
+/bin/busybox mount -t ramfs -o size=2048M ramfs /ramfs
 /bin/busybox mkdir /newroot
 init="/lib/systemd/systemd"
 newroot="/dev/sda1"
-
 /bin/busybox mount "${newroot}" /newroot
-exec /bin/busybox switch_root /newroot "${init}"
+/bin/busybox cp -rfv /newroot/* /ramfs
+exec /bin/busybox switch_root /ramfs "${init}"
 EOF
 cd ../usr/
 gcc gen_init_cpio.c -o gen_init_cpio
