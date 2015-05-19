@@ -1477,7 +1477,7 @@ export AR="x86_64-media-linux-gnu-ar"
 export RANLIB="x86_64-media-linux-gnu-ranlib"
 export STRIP="x86_64-media-linux-gnu-strip"
 
-#InstallBash
+InstallBash
 
 InstallNcurses
 InstallHtop
