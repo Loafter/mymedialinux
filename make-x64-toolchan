@@ -6,9 +6,9 @@ isget="$2"
 SYSROOT="$CLFS/root"
 export PATH=$CLFS/bin/:$PATH
 HOST="x86_64-pc-linux-gnu"
-LINUX_VERSION=4.0-rc6
+LINUX_VERSION=4.1-rc3
 BINUTILS_VERSION=2.25
-GCC_VERSION=4.9.2
+GCC_VERSION=5.1.0
 unset CFLAGS
 unset CXXFLAGS
 check_success() {
@@ -164,6 +164,7 @@ then
     --with-headers=$SYSROOT/include \
     --build=$HOST \
     --host=$TARGET \
+    --enable-obsolete-rpc \
     --disable-profile --without-gd --without-cvs --enable-add-ons --cache-file=config.cache
     check_success 
     make V=0 -j 9
@@ -201,7 +202,10 @@ then
     --enable-checking=release \
     --disable-multilib \
     --disable-nls \
-    --enable-libstdcxx-time
+    --disable-libstdcxx-pch \
+    --disable-multilib     \
+    --disable-bootstrap \
+    --disable-libgomp
     make V=0 AS_FOR_TARGET="$TARGET-as" LD_FOR_TARGET="$TARGET-ld" -j 9 
     check_success
 fi

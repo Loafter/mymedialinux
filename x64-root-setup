@@ -40,11 +40,11 @@ InstallBash()
 {
 if [ "$isget" = "get" ]
 then
-    wget -c "http://ftp.gnu.org/gnu/bash/bash-4.3.tar.gz"
-    tar -xvf bash-4.3.tar.gz
-    rm bash-4.3.tar.gz
+    wget -c "http://ftp.gnu.org/gnu/bash/bash-4.3.30.tar.gz"
+    tar -xvf bash-4.3.30.tar.gz
+    rm bash-4.3.30.tar.gz
 fi
-cd bash-4.3
+cd bash-4.3.30
 make V=0 clean
 ./configure --without-bash-malloc --prefix=/ --host=$HOST #--enable-static-link
 #patch execute_cmd.c <  ../bashjobcontrol.patch
@@ -75,7 +75,7 @@ cd inetutils-1.9.2
 make V=0 clean
 ./configure --prefix=/ --host=$HOST CFLAGS="-I$SYSROOT/include/ -O2" \
   --disable-rlogind \
-  --disable-rshd \
+  --disable-rshd \331
   --disable-syslogd \
   --disable-talkd \
   --disable-telnetd \
@@ -371,15 +371,15 @@ InstallCurl()
 {
 if [ "$isget" = "get" ]
 then
-    wget -c "http://curl.haxx.se/download/curl-7.38.0.tar.gz"
-    tar -xf curl-7.38.0.tar.gz
-    rm curl-7.38.0.tar.gz
+    wget -c "http://curl.haxx.se/download/curl-7.42.0.tar.gz"
+    tar -xf curl-7.42.0.tar.gz
+    rm curl-7.42.0.tar.gz
     #wget -c "http://ftp.de.debian.org/debian/pool/main/c/curl/curl_7.37.0.orig.tar.gz"
     #tar -xf curl_7.37.0.orig.tar.gz
     #rm curl_7.37.0.orig.tar.gz
 fi
 
-cd curl-7.38.0
+cd curl-7.42.0
 make V=0 clean
 ./configure --prefix=/ --host=$HOST
 make V=0 -j 9
@@ -479,12 +479,11 @@ InstallNcurses()
 
 if [ "$isget" = "get" ]
 then
-    wget -c "http://ftp.gnu.org/pub/gnu/ncurses/ncurses-5.9.tar.gz"
-    tar -xf ncurses-5.9.tar.gz
-    rm ncurses-5.9.tar.gz
+    rm -rfv ./ncurses
+    git clone git://ncurses.scripts.mit.edu/ncurses.git
 fi
 
-cd ncurses-5.9
+cd ncurses
 make V=0 clean
 ./configure --prefix=/ --host=$HOST --mandir="/share"
 make V=0 -j 9
@@ -730,6 +729,7 @@ InstallLinux()
 {
 if [ "$isget" = "get" ]
 then
+
     wget -c "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-$LINUX_VERSION.tar.gz"
     tar -xf linux-$LINUX_VERSION.tar.gz
     rm linux-$LINUX_VERSION.tar.gz
@@ -803,6 +803,7 @@ export LD_LIBRARY_PATH=/lib:
 /bin/busybox mkdir /newroot
 init="/lib/systemd/systemd"
 newroot="/dev/sda1"
+/bin/busybox sleep 2s
 /bin/busybox mount "${newroot}" /newroot
 /bin/busybox cp -rfv /newroot/* /ramfs
 exec /bin/busybox switch_root /ramfs "${init}"
@@ -811,6 +812,11 @@ cd ../usr/
 gcc gen_init_cpio.c -o gen_init_cpio
 cd -
 ../usr/gen_init_cpio ./init.conf > initramfs
+#cd $SYSROOT/..
+#mv -v ./root ./realroot
+#find ./ -depth -print | cpio -o --append -H newc -F initramfs
+#mv -v ./realroot ./root
+#cd -
 cp -v initramfs $SYSROOT/boot/
 cd ..
 cd ..
@@ -869,14 +875,13 @@ InstallUtillinux()
 if [ "$isget" = "get" ]
 then
     
-    wget -c "https://www.kernel.org/pub/linux/utils/util-linux/v2.25/util-linux-2.25.2.tar.gz"
-    tar -xf util-linux-2.25.2.tar.gz
-    rm util-linux-2.25.2.tar.gz
+    wget -c "https://www.kernel.org/pub/linux/utils/util-linux/v2.26/util-linux-2.26.2.tar.gz"
+    tar -xf util-linux-2.26.2.tar.gz
+    rm util-linux-2.26.2.tar.gz
 fi
-cd util-linux-2.25.2
+cd util-linux-2.26.2
 make V=0 clean
-./configure --prefix=/  --host=$HOST CFLAGS="-I$SYSROOT/include/ -I$SYSROOT/include/ncurses/ -O2" --with-ncurses \
-		        --disable-makeinstall-chown --without-python
+./configure --prefix=/  --host=$HOST CFLAGS="-I$SYSROOT/include/ -I$SYSROOT/include/ncurses/ -O2" --with-ncurses --disable-makeinstall-chown --without-python
 sed -i -e 's|-ltinfo|-lncurses|g' Makefile 
 make V=0 -j 9
 check_success
@@ -1084,7 +1089,7 @@ make V=0 clean
 --disable-ima --disable-blkid --disable-binfmt --disable-tmpfiles \
 --disable-sysusers --disable-firstboot --disable-randomseed \
 --disable-backlight --disable-rfkill --disable-timesyncd \
---disable-coredump --disable-myhostname \
+--disable-coredump --disable-myhostname --disable-ldconfig \
 --with-rootprefix="/" \
 --with-dbuspolicydir="/etc/" \
 --with-dbussystemservicedir="/etc/" \
@@ -1460,7 +1465,7 @@ cd ..
 CLFS="$1"
 SYSROOT="$CLFS/root"
 HOST="x86_64-media-linux-gnu"
-LINUX_VERSION=4.0-rc7
+LINUX_VERSION=4.1-rc3
 export PATH=$CLFS/bin/:$PATH
 unset CFLAGS
 unset CXXFLAGS
@@ -1474,34 +1479,34 @@ export STRIP="x86_64-media-linux-gnu-strip"
 
 #InstallBash
 
-#InstallNcurses
-#InstallHtop
-#InstallNano
+InstallNcurses
+InstallHtop
+InstallNano
 
-#InstallUtillinux
-#CreatePkgShadow
+InstallUtillinux
+CreatePkgShadow
 
-#InstallCoreUtils
-#InstallIproute2
+InstallCoreUtils
+InstallIproute2
 
 
-#InstallReadline
-#InstallNettle
-#InstallGmp
-#InstallGnutls
-#InstallOpenConnect
+##InstallReadline
+##InstallNettle
+##InstallGmp
+##InstallGnutls
+##InstallOpenConnect
 
-#InstallCurl
-#InstallLibEvent
-#InstallTransmission
+##InstallCurl
+##InstallLibEvent
+##InstallTransmission
 
-#InstallLibAttr
-#InstallLibCap
-#InstallSystemD
+InstallLibAttr
+InstallLibCap
+InstallSystemD
 
-#InstallZlib
-#InstallOpenSSl
-#InstallOpenSSH
+InstallZlib
+InstallOpenSSl
+InstallOpenSSH
 
 #InstallPCRE
 #InstallApr
@@ -1509,8 +1514,8 @@ export STRIP="x86_64-media-linux-gnu-strip"
 #InstallApache
 
 
-#InstallLinux
-#AddScratch
+InstallLinux
+AddScratch
 #InstallXbmc
 InstallInitram
 #CreateQemuImage
