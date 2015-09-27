@@ -1,14 +1,24 @@
 #!/bin/sh
-#sudo apt-get install gawk make gcc g++ gperf git subversion
+#sudo apt-get g++ libncurses5-dev libtinfo-dev g++-4.9 autopoint libapr1 libaprutil1 libserf-1-1 libsvn1 subversion gcc gcc-4.9 libtool gperf libgcrypt-dev intltool gettext automake autogen autoconf autogen autogen-doc automake autotools-dev guile-2.0-libs libgc1c2 libopts25 libopts25-dev m4
+# fonts-lmodern fonts-texgyre libfile-homedir-perl libfile-which-perl
+#  libjs-jquery libpotrace0 libptexenc1 libruby2.1 libsynctex1 libyaml-0-2
+#  libzzip-0-13 lmodern prosper ps2eps ruby ruby2.1 rubygems-integration
+#  tex-common tex-gyre texlive texlive-base texlive-binaries
+#  texlive-extra-utils texlive-font-utils texlive-fonts-recommended
+#  texlive-fonts-recommended-doc texlive-generic-recommended texlive-latex-base
+#  texlive-latex-base-doc texlive-latex-recommended
+#  texlive-latex-recommended-doc texlive-pictures texliv e-pictures-doc
+#  texlive-pstricks texlive-pstricks-doc tipa bison libprotobuf-c-dev libprotobuf-c1 libprotoc9 protobuf-c-compiler flex libfl-dev gnutls-bin
+
 TARGET="x86_64-media-linux-gnu"
 CLFS="$1"
 isget="$2"
 SYSROOT="$CLFS/root"
 export PATH=$CLFS/bin/:$PATH
 HOST="x86_64-pc-linux-gnu"
-LINUX_VERSION=4.1-rc3
+LINUX_VERSION=4.2
 BINUTILS_VERSION=2.25
-GCC_VERSION=5.1.0
+GCC_VERSION=5.2.0
 unset CFLAGS
 unset CXXFLAGS
 check_success() {
@@ -36,7 +46,7 @@ InstallKernelHeader()
 
 if [ "$isget" = "get" ]
 then
-    wget -c "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-$LINUX_VERSION.tar.gz"
+    wget -c "https://www.kernel.org/pub/linux/kernel/v4.x/linux-$LINUX_VERSION.tar.gz"
     tar -xf linux-$LINUX_VERSION.tar.gz
     rm linux-$LINUX_VERSION.tar.gz
 fi
@@ -48,7 +58,7 @@ then
     make ARCH=x86 headers_check
 fi
 make ARCH=x86 INSTALL_HDR_PATH=$SYSROOT headers_install
-cd ..
+cd -
 check_success
 }
 
@@ -216,8 +226,8 @@ check_success
 cd ..
 }
  
-InstallKernelHeader
-InstallBinutils
-InstallStaticGCC
+#InstallKernelHeader
+#InstallBinutils
+#InstallStaticGCC
 InstallGLIB
 InstallFinallGCC

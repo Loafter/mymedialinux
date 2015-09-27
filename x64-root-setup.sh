@@ -17,12 +17,12 @@ if [ "$isget" = "get" ]
 then
     rm -rfv ./coreutils
     #git clone git://git.sv.gnu.org/coreutils
-    wget -c "http://ftp.gnu.org/gnu/coreutils/coreutils-8.23.tar.xz"
-    tar -Jxf coreutils-8.23.tar.xz
-    rm coreutils-8.23.tar.xz
+    wget -c "http://ftp.gnu.org/gnu/coreutils/coreutils-8.24.tar.xz"
+    tar -Jxf coreutils-8.24.tar.xz
+    rm coreutils-8.24.tar.xz
 fi
 
-cd coreutils-8.23
+cd coreutils-8.24
 ./configure --prefix=/ --host=$HOST --build=x86_64-linux-gnu
 patch ./Makefile < ../dummymake.patch
 patch ./man/dummy-man < ../dummyman.patch
@@ -66,12 +66,12 @@ InstallInetUtils()
 
 if [ "$isget" = "get" ]
 then
-    wget -c "http://ftp.gnu.org/gnu/inetutils/inetutils-1.9.2.tar.gz"
-    tar -xvf inetutils-1.9.2.tar.gz
-    rm inetutils-1.9.2.tar.gz
+    wget -c "http://ftp.gnu.org/gnu/inetutils/inetutils-1.9.4.tar.gz"
+    tar -xvf inetutils-1.9.4.tar.gz
+    rm inetutils-1.9.4.tar.gz
 fi
 
-cd inetutils-1.9.2
+cd inetutils-1.9.4
 make V=0 clean
 ./configure --prefix=/ --host=$HOST CFLAGS="-I$SYSROOT/include/ -O2" \
   --disable-rlogind \
@@ -118,10 +118,11 @@ cd iproute2
 make V=0 clean
 ./configure --prefix=/ --host=$HOST
 sed -i '/^TARGETS/s@arpd@@g' misc/Makefile
-sed -i -e 's|PREFIX=/usr|PREFIX=/|g' ./Makefile 
+sed -i -e 's|PREFIX?=/usr|PREFIX=/|g' ./Makefile
 make  V=0 -j 9
 check_success
-make V=0 install DESTDIR=$SYSROOT
+#make V=0 install DESTDIR=$SYSROOT
+make V=0 install DESTDIR="/home/andrew/Desktop/iproute2/"
 check_success
 cd ..
 }
@@ -171,16 +172,16 @@ InstallOpenSSl()
 
 if [ "$isget" = "get" ]
 then
-    wget -c "http://www.openssl.org/source/openssl-1.0.2a.tar.gz"
-    tar -xf openssl-1.0.2a.tar.gz
-    rm openssl-1.0.2a.tar.gz
+    wget -c "http://www.openssl.org/source/openssl-1.0.2d.tar.gz"
+    tar -xf openssl-1.0.2d.tar.gz
+    rm openssl-1.0.2d.tar.gz
 fi
 #cp 1.0.1g-docfixes-diff.patch ./openssl-1.0.1g
-cd openssl-1.0.2a
+cd openssl-1.0.2d
 #patch -p1 <1.0.1g-docfixes-diff.patch
 make V=0 clean
 ./Configure linux-elf --prefix=/ no-asm -fPIC --openssldir=/etc/ssl
-make
+make -j 9
 check_success
 make install INSTALL_PREFIX=$SYSROOT
 check_success
@@ -193,14 +194,14 @@ InstallOpenSSH()
 {
 if [ "$isget" = "get" ]
 then
-    wget -c "http://mirror.yandex.ru/pub/OpenBSD/OpenSSH/portable/openssh-6.8p1.tar.gz"
-    tar -xf openssh-6.8p1.tar.gz
-    rm openssh-6.8p1.tar.gz
+    wget -c "http://mirror.yandex.ru/pub/OpenBSD/OpenSSH/portable/openssh-7.1p1.tar.gz"
+    tar -xf openssh-7.1p1.tar.gz
+    rm openssh-7.1p1.tar.gz
 fi
 
-cd openssh-6.8p1
+cd openssh-7.1p1
 make V=0 clean
-./configure --prefix=/ --host=$HOST --sysconfdir=/etc/ssh
+./configure --prefix=/ --host=$HOST --sysconfdir=/etc/ssh --with-pam
 #
 make V=0 LDFLAGS="-dynamic-linker /lib64/ld-linux-x86-64.so.2 $SYSROOT/lib/crt1.o $SYSROOT/lib/crti.o $SYSROOT/lib/crtn.o -L. -Lopenbsd-compat/ -L$SYSROOT/lib -lc -lgcc_s"  CFLAGS="-DHAVE_SETLOGIN -UHAVE_PROC_PID -fPIC -g -O2 -Wall -Wpointer-arith -Wuninitialized -Wsign-compare -Wformat-security -Wsizeof-pointer-memaccess -Wno-pointer-sign -Wno-unused-result -fno-strict-aliasing -D_FORTIFY_SOURCE=2 -fno-builtin-memset -fstack-protector-all" -j 3
 check_success  -j 9
@@ -211,139 +212,15 @@ check_success
 
 mkdir -p -v "$SYSROOT/etc/ssh/"
 cat > "$SYSROOT/etc/ssh/sshd_config" << "EOF"
-#	$OpenBSD: sshd_config,v 1.93 2014/01/10 05:59:19 djm Exp $
-
-# This is the sshd server system-wide configuration file.  See
-# sshd_config(5) for more information.
-
-# This sshd was compiled with PATH=/bin:/bin:/sbin:/sbin://bin
-
-# The strategy used for options in the default sshd_config shipped with
-# OpenSSH is to specify options with their default value where
-# possible, but leave them commented.  Uncommented options override the
-# default value.
-
-#Port 22
-#AddressFamily any
-#ListenAddress 0.0.0.0
-#ListenAddress ::
-
-# The default requires explicit activation of protocol 1
-#Protocol 2
-
-# HostKey for protocol version 1
-#HostKey /etc/ssh/ssh_host_key
-# HostKeys for protocol version 2
-#HostKey /etc/ssh/ssh_host_rsa_key
-#HostKey /etc/ssh/ssh_host_dsa_key
-#HostKey /etc/ssh/ssh_host_ecdsa_key
-#HostKey /etc/ssh/ssh_host_ed25519_key
-
-# Lifetime and size of ephemeral version 1 server key
-#KeyRegenerationInterval 1h
-#ServerKeyBits 1024
-
-# Ciphers and keying
-#RekeyLimit default none
-
-# Logging
-# obsoletes QuietMode and FascistLogging
-#SyslogFacility AUTH
-#LogLevel INFO
-
-# Authentication:
-
-#LoginGraceTime 2m
-#PermitRootLogin yes
-#StrictModes yes
-#MaxAuthTries 6
-#MaxSessions 10
-
-#RSAAuthentication yes
-#PubkeyAuthentication yes
-
-# The default is to check both .ssh/authorized_keys and .ssh/authorized_keys2
-# but this is overridden so installations will only check .ssh/authorized_keys
-AuthorizedKeysFile	.ssh/authorized_keys
-
-#AuthorizedPrincipalsFile none
-
-#AuthorizedKeysCommand none
-#AuthorizedKeysCommandUser nobody
-
-# For this to work you will also need host keys in /etc/ssh/ssh_known_hosts
-#RhostsRSAAuthentication no
-# similar for protocol version 2
-#HostbasedAuthentication no
-# Change to yes if you don't trust ~/.ssh/known_hosts for
-# RhostsRSAAuthentication and HostbasedAuthentication
-#IgnoreUserKnownHosts no
-# Don't read the user's ~/.rhosts and ~/.shosts files
-#IgnoreRhosts yes
-
-# To disable tunneled clear text passwords, change to no here!
-#PasswordAuthentication yes
-#PermitEmptyPasswords no
-
-# Change to no to disable s/key passwords
-#ChallengeResponseAuthentication yes
-
-# Kerberos options
-#KerberosAuthentication no
-#KerberosOrLocalPasswd yes
-#KerberosTicketCleanup yes
-#KerberosGetAFSToken no
-
-# GSSAPI options
-#GSSAPIAuthentication no
-#GSSAPICleanupCredentials yes
-
-# Set this to 'yes' to enable PAM authentication, account processing,
-# and session processing. If this is enabled, PAM authentication will
-# be allowed through the ChallengeResponseAuthentication and
-# PasswordAuthentication.  Depending on your PAM configuration,
-# PAM authentication via ChallengeResponseAuthentication may bypass
-# the setting of "PermitRootLogin without-password".
-# If you just want the PAM account and session checks to run without
-# PAM authentication, then enable this but set PasswordAuthentication
-# and ChallengeResponseAuthentication to 'no'.
-#UsePAM no
-
-#AllowAgentForwarding yes
-#AllowTcpForwarding yes
+AuthorizedKeysFile      .ssh/authorized_keys
 GatewayPorts yes
+PasswordAuthentication yes
+PermitRootLogin yes
+UsePAM yes
 X11Forwarding yes
-#X11DisplayOffset 10
-#X11UseLocalhost yes
-#PermitTTY yes
-#PrintMotd yes
-#PrintLastLog yes
-#TCPKeepAlive yes
-#UseLogin no
-UsePrivilegeSeparation no		# Default for new installations.
-#PermitUserEnvironment no
-#Compression delayed
-#ClientAliveInterval 0
-#ClientAliveCountMax 3
-#UseDNS yes
-#PidFile /var/run/sshd.pid
-#MaxStartups 10:30:100
-#PermitTunnel no
-#ChrootDirectory none
-#VersionAddendum none
+UsePrivilegeSeparation no               # Default for new installations.
+Subsystem       sftp    /libexec/sftp-server
 
-# no default banner path
-#Banner none
-
-# override default of no subsystems
-Subsystem	sftp	//libexec/sftp-server
-
-# Example of overriding settings on a per-user basis
-#Match User anoncvs
-#	X11Forwarding no
-#	AllowTcpForwarding no
-#	PermitTTY no
-#	ForceCommand cvs server
 EOF
 
 ssh-keygen -t rsa -q -f "$SYSROOT/etc/ssh/ssh_host_rsa_key"
@@ -527,8 +404,12 @@ then
  	git clone https://github.com/hishamhm/htop 
 fi
 cd htop
-make V=0 clean
-./autogen.sh
+aclocal -I m4
+autoconf
+autoheader
+libtoolize --copy --force
+automake --add-missing --copy
+check_success
 ./configure --prefix=/ --host=$HOST --disable-unicode CFLAGS="-I$SYSROOT/include/ -O2"
 make -j 9
 check_success
@@ -627,13 +508,13 @@ InstallNettle()
 if [ "$isget" = "get" ]
 then
     rm -rfv ./nettle*
-    #git clone https://git.lysator.liu.se/nettle/nettle.git
-    wget -c  http://ftp.gnu.org/gnu/nettle/nettle-2.7.1.tar.gz
-    tar -xvf nettle-2.7.1.tar.gz
+    git clone https://git.lysator.liu.se/nettle/nettle.git
+    #wget -c  http://ftp.gnu.org/gnu/nettle/nettle-2.7.1.tar.gz
+    #//tar -xvf nettle-2.7.1.tar.gz
 fi
-cd nettle-2.7.1
+cd nettle
 autoreconf
-./configure --prefix=/ --host=$HOST --disable-openssl
+./configure --prefix=/ --host=$HOST --disable-openssl --enable-mini-gmp
 check_success
 make V=0 -j 9 LDFLAGS="-ldl"
 check_success
@@ -647,7 +528,7 @@ InstallGnutls()
 if [ "$isget" = "get" ]
 then
     rm -rfv ./gnutls*
-    git clone git://gitorious.org/gnutls/gnutls.git
+    git clone https://gitlab.com/gnutls/gnutls.git
     #wget -c  ftp://ftp.gnutls.org/gcrypt/gnutls/v3.3/gnutls-3.3.8.tar.xz
     #tar -xf gnutls-3.3.8.tar.xz	
 fi
@@ -659,7 +540,7 @@ check_success
 #sed -i -e 's|"x$crywrap" != "xno"|"x$crywrap" == "xno"|g' ./configure
 ./configure --prefix=/ --host=$HOST NETTLE_CFLAGS="-I$SYSROOT/include" NETTLE_LIBS="-L$SYSROOT/lib -lnettle" \
 				    HOGWEED_CFLAGS="-I$SYSROOT/include" HOGWEED_LIBS="-L$SYSROOT/lib -lhogweed" --disable-nls \
-				    --disable-doc  --disable-openssl-compatibility \
+				    --with-included-libtasn1 --disable-doc  --disable-openssl-compatibility \
 				    --with-default-trust-store-file="/etc/ssl/ca-bundle.crt" --enable-local-libopts=yes --without-p11-kit
    	
 
@@ -678,17 +559,19 @@ InstallOpenConnect()
 if [ "$isget" = "get" ]
 then
     rm -rfv ./ocserv*
-    #git clone git://git.infradead.org/ocserv.git
-    wget -c  ftp://ftp.infradead.org/pub/ocserv/ocserv-0.8.6.tar.xz
-    tar -xvf ocserv-0.8.6.tar.xz	
+    git clone git://git.infradead.org/ocserv.git
+    #wget -c  ftp://ftp.infradead.org/pub/ocserv/ocserv-0.8.6.tar.xz
+    #tar -xvf ocserv-0.8.6.tar.xz
 fi
-cd ocserv-0.8.6
-#make autoreconf 
-#chmod +x ./autogen.sh
-#./autogen.sh
+cd ocserv
+sed -i -e 's|SUBDIRS += src doc tests|SUBDIRS += src tests|g' ./Makefile.am
+make autoreconf
+chmod +x ./autogen.sh
+./autogen.sh
 
-mkdir ./src/google/protobuf-c/ -pv
-cp -rfv ./src/protobuf/protobuf-c/* ./src/google/protobuf-c/
+
+#mkdir ./src/google/protobuf-c/ -pv
+#cp -rfv ./src/protobuf/protobuf-c/* ./src/google/protobuf-c/
 ./configure --prefix=/ --host=$HOST LIBGNUTLS_CFLAGS="-I$SYSROOT/include" LIBGNUTLS_LIBS="-L$SYSROOT/lib -lgnutls" \
 				    LIBREADLINE_CFLAGS="-I$SYSROOT/include/readline"  LIBREADLINE_LIBS="-L$SYSROOT/lib -lreadline -lncurses"  \
 				    --enable-local-libopts=yes  --disable-systemd --without-protobuf
@@ -719,6 +602,8 @@ make V=0 clean
 check_success
 make V=0 -j 9
 check_success
+rm -v ./doc/Makefile
+touch ./doc/Makefile
 make V=0 install DESTDIR=$SYSROOT
 check_success
 cd ..
@@ -730,10 +615,11 @@ InstallLinux()
 if [ "$isget" = "get" ]
 then
 
-    wget -c "https://www.kernel.org/pub/linux/kernel/v4.x/testing/linux-$LINUX_VERSION.tar.gz"
+    wget -c "https://www.kernel.org/pub/linux/kernel/v4.x/linux-$LINUX_VERSION.tar.gz"
     tar -xf linux-$LINUX_VERSION.tar.gz
     rm linux-$LINUX_VERSION.tar.gz
 fi
+cp ./.config ./linux-$LINUX_VERSION
 cd linux-$LINUX_VERSION
 make V=0 clean
 
@@ -798,15 +684,12 @@ export LD_LIBRARY_PATH=/lib:
 /bin/busybox mount -n -t proc     proc     /proc
 /bin/busybox mount -n -t sysfs    sysfs    /sys
 /bin/busybox mount -t tmpfs -o size=128m tmpfs /tmp
-/bin/busybox mkdir /ramfs
-/bin/busybox mount -t ramfs -o size=2048M ramfs /ramfs
+
 /bin/busybox mkdir /newroot
 init="/lib/systemd/systemd"
 newroot="/dev/sda1"
-/bin/busybox sleep 2s
 /bin/busybox mount "${newroot}" /newroot
-/bin/busybox cp -rfv /newroot/* /ramfs
-exec /bin/busybox switch_root /ramfs "${init}"
+exec /bin/busybox switch_root /newroot "${init}"
 EOF
 cd ../usr/
 gcc gen_init_cpio.c -o gen_init_cpio
@@ -829,7 +712,7 @@ InstallLibAttr()
 if [ "$isget" = "get" ]
 then
     
-    wget -c "http://download.savannah.gnu.org/releases/attr/attr-2.4.47.src.tar.gz"
+    wget -c "http://ftp.mirrorservice.org/sites/download.savannah.gnu.org/releases/attr/attr-2.4.47.src.tar.gz"
     tar -xf attr-2.4.47.src.tar.gz
     rm attr-2.4.47.src.tar.gz
 fi
@@ -875,11 +758,11 @@ InstallUtillinux()
 if [ "$isget" = "get" ]
 then
     
-    wget -c "https://www.kernel.org/pub/linux/utils/util-linux/v2.26/util-linux-2.26.2.tar.gz"
-    tar -xf util-linux-2.26.2.tar.gz
-    rm util-linux-2.26.2.tar.gz
+    wget -c "https://www.kernel.org/pub/linux/utils/util-linux/v2.27/util-linux-2.27.tar.gz"
+    tar -xf util-linux-2.27.tar.gz
+    rm util-linux-2.27.tar.gz
 fi
-cd util-linux-2.26.2
+cd util-linux-2.27
 make V=0 clean
 ./configure --prefix=/  --host=$HOST CFLAGS="-I$SYSROOT/include/ -I$SYSROOT/include/ncurses/ -O2" --with-ncurses --disable-makeinstall-chown --without-python
 sed -i -e 's|-ltinfo|-lncurses|g' Makefile 
@@ -1090,6 +973,58 @@ make V=0 clean
 --disable-sysusers --disable-firstboot --disable-randomseed \
 --disable-backlight --disable-rfkill --disable-timesyncd \
 --disable-coredump --disable-myhostname --disable-ldconfig \
+-disable-dbus \
+  --disable-utmp \
+  --disable-kmod \
+  --disable-xkbcommon \
+  --disable-blkid  \
+  --disable-seccomp \
+  --disable-ima \
+  --disable-selinux \
+  --disable-apparmor \
+  --disable-xz \
+  --disable-zlib \
+  --enable-bzip2 \
+  --disable-pam  \
+  --disable-acl \
+  --disable-smack \
+  --disable-gcrypt \
+  --disable-audit  \
+  --disable-elfutils \
+  --disable-libcryptsetup \
+  --disable-qrencode  \
+  --disable-microhttpd \
+  --disable-gnutls \
+  --disable-libcurl \
+  --disable-libidn \
+  --disable-libiptc \
+  --disable-binfmt  \
+  --disable-vconsole \
+  --disable-quotacheck \
+  --disable-tmpfiles  \
+  --disable-sysusers \
+  --disable-firstboot \
+  --disable-randomseed \
+  --disable-backlight \
+  --disable-rfkill \
+  --disable-logind \
+  --disable-machined \
+  --disable-importd \
+  --disable-hostnamed \
+  --disable-timedated \
+  --disable-timesyncd \
+  --disable-localed \
+  --disable-coredump \
+  --disable-polkit \
+  --disable-resolved \
+  --disable-efi \
+  --disable-kdbus \
+  --disable-myhostname \
+  --disable-hwdb \
+  --disable-manpages  \
+  --disable-hibernate \
+  --disable-ldconfig \
+  --disable-tests  \
 --with-rootprefix="/" \
 --with-dbuspolicydir="/etc/" \
 --with-dbussystemservicedir="/etc/" \
@@ -1460,12 +1395,27 @@ check_success
 cd ..
 }
 
+ CreateQemuImage()
+ {
 
+mkdir -p $SYSROOT/../x64image
+cd $SYSROOT/../x64image
+ rm -vf disk.img
+ qemu-img create -f raw disk.img 1200M
+ mkfs.ext4 -F disk.img
+ mkdir fs
+ sudo mount -o loop disk.img ./fs/
+sudo cp -rfv $SYSROOT/* ./fs/
+sudo cp -rfv $SYSROOT/boot/* ./
+ sudo umount ./fs/
+cd -
+ #sudo qemu-system-x86_nvidia opensorce driver64 -kernel ./bzImage -initrd ./initramfs -serial stdio -append "root=/dev/ram0 console=ttyAMA0  console=ttyS0" -hda ./disk.img
+ }
 
 CLFS="$1"
 SYSROOT="$CLFS/root"
 HOST="x86_64-media-linux-gnu"
-LINUX_VERSION=4.1-rc3
+LINUX_VERSION=4.2
 export PATH=$CLFS/bin/:$PATH
 unset CFLAGS
 unset CXXFLAGS
@@ -1477,47 +1427,49 @@ export AR="x86_64-media-linux-gnu-ar"
 export RANLIB="x86_64-media-linux-gnu-ranlib"
 export STRIP="x86_64-media-linux-gnu-strip"
 
-InstallBash
 
-InstallNcurses
-InstallHtop
-InstallNano
+#InstallBash
 
-InstallUtillinux
-CreatePkgShadow
+#InstallNcurses
+#InstallHtop
+#InstallNano
 
-InstallCoreUtils
-InstallIproute2
+#InstallUtillinux
+#CreatePkgShadow
+
+#InstallCoreUtils
+#InstallIproute2
 
 
-##InstallReadline
-##InstallNettle
-##InstallGmp
-##InstallGnutls
-##InstallOpenConnect
-
+#InstallReadline
+#InstallGmp
+#InstallNettle
+#InstallGnutls
+#InstallOpenConnect
+#InstallIproute2
 ##InstallCurl
 ##InstallLibEvent
 ##InstallTransmission
 
-InstallLibAttr
-InstallLibCap
-InstallSystemD
+#InstallLibAttr
+#InstallLibCap
+#InstallSystemD
 
-InstallZlib
-InstallOpenSSl
-InstallOpenSSH
+
+#InstallZlib
+#InstallOpenSSl
+#InstallOpenSSH
 
 #InstallPCRE
-#InstallApr
+#InstallApr#
 #InstallAprTool
 #InstallApache
 
 
 InstallLinux
-AddScratch
+#AddScratch
 #InstallXbmc
-InstallInitram
+#InstallInitram
 #CreateQemuImage
 
 
